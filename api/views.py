@@ -62,8 +62,6 @@ class ProductUpdateView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 class ProductLists(GenericAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
@@ -73,6 +71,7 @@ class ProductLists(GenericAPIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
+#  Generic
 class ProductDetails(GenericAPIView,UpdateModelMixin):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
