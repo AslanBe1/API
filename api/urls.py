@@ -21,4 +21,9 @@ urlpatterns = [
     path('category-list/', views.CategoryList.as_view(), name='CategoryList'),
     path('category-details/<int:pk>/', views.CategoryDetail.as_view(), name='CategoryDetails'),
     path('category-create/',views.CategoryCreates.as_view(), name='CategoryCreates'),
+
+#   Tuitkf
+
+    # path('tuitkf/', views.ExitAPI.as_view(), name='tuitkf'),
+
 ]

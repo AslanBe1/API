@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -7,9 +8,30 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from api.models import Product, Category
 from api.serializers import ProductSerializer, CategorySerializer
+from bs4 import BeautifulSoup
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
-# Create your views here.
+# class ExitAPI(APIView):
+#     def get(self, request):
+#         url = "https://tuitkf.uz/en/"
+#         headers = {"User-Agent": "Mozilla/5.0"}
+#
+#         response = requests.get(url, headers=headers)
+#         if response.status_code != 200:
+#             return Response({"error": "Failed to fetch data"}, status=response.status_code)
+#
+#         soup = BeautifulSoup(response.text, "html.parser")
+#
+#         data = {
+#             "title": soup.title.string if soup.title else "No title",
+#             "h1": [h1.text.strip() for h1 in soup.find_all("h1")],
+#             "links": [a["href"] for a in soup.find_all("a", href=True)]
+#         }
+#
+#         return Response(data)
+
 
 class ProductList(APIView):
     permission_classes = [AllowAny,]
