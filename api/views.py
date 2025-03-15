@@ -41,6 +41,16 @@ class ProductList(APIView):
         serializer = ProductSerializer(products, many=True, context={'request': request})
         return Response(serializer.data)
 
+
+    def post(self,request,format=None):
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class ProductDetailView(APIView):
     def get(self,request, pk,format=None):
         product = Product.objects.get(pk=pk)
@@ -62,36 +72,24 @@ class ProductDetailView(APIView):
             data = {'Message': 'Product deleted successfully'}
             return Response(data, status=status.HTTP_204_NO_CONTENT)
 
-class ProductCreateView(APIView):
-    permission_classes = [AllowAny,]
-    def post(self,request,format=None):
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class ProductUpdateView(APIView):
-    permission_classes = [AllowAny,]
-    def put(self,request,pk,format=None):
-        product = get_object_or_404(Product,pk=pk)
-        serializer = ProductSerializer(product,data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 #          Generic
+
 class ProductLists(GenericAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
 
     def get(self, request, format=None):
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
+        serializer = ProductSerializer(products, many=True, context = {"request": request})
         return Response(serializer.data)
+
+    def post(self,request,format=None):
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductDetails(GenericAPIView,UpdateModelMixin):
@@ -113,37 +111,19 @@ class ProductDetails(GenericAPIView,UpdateModelMixin):
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
-class ProductCreates(GenericAPIView):
-    serializer_class = ProductSerializer
-    queryset = Product.objects.all()
-    def post(self,request,format=None):
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProductUpdate(GenericAPIView,UpdateModelMixin):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-
-    def get(self, request, pk, format=None):
-        products = Product.objects.get(pk=pk)
-        serializer = ProductSerializer(products)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None,*args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-
 class CategoryList(APIView):
     permission_classes = [AllowAny,]
     def get(self, request, format=None):
         categories = Category.objects.all()
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data)
+
+    def post(self,request,format=None):
+        serializer = CategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryDetail(APIView):
@@ -167,12 +147,28 @@ class CategoryDetail(APIView):
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
-class CategoryCreates(APIView):
-    serializer_class = CategorySerializer
-    queryset = Category.objects.all()
-    def post(self,request,format=None):
-        serializer = CategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#     Product
+# class ProductUpdate(GenericAPIView,UpdateModelMixin):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#
+#     def get(self, request, pk, format=None):
+#         products = Product.objects.get(pk=pk)
+#         serializer = ProductSerializer(products)
+#         return Response(serializer.data)
+#
+#     def put(self, request, pk, format=None,*args, **kwargs):
+#         return self.update(request, *args, **kwargs)
+
+
+# class ProductUpdateView(APIView):
+#     permission_classes = [AllowAny,]
+#     def put(self,request,pk,format=None):
+#         product = get_object_or_404(Product,pk=pk)
+#         serializer = ProductSerializer(product,data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
