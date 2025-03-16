@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils.text import slugify
 
@@ -34,6 +35,7 @@ class Product(models.Model):
     rating = models.IntegerField(choices=RatingChoices.choices, default=RatingChoices.ONE)
     slug = models.SlugField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,related_name='products')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if self.slug:
@@ -56,3 +58,22 @@ class Product(models.Model):
         if self.image:
             return self.image.url
         return ''
+
+
+class Comment(models.Model):
+    class RatingChoices(models.IntegerChoices):
+        ONE = 1
+        TWO = 2
+        THREE = 3
+        FOUR = 4
+        FIVE = 5
+
+    comment = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
+    rating = models.IntegerField(choices=RatingChoices.choices, default=RatingChoices.ONE)
+    image = models.ImageField(upload_to='media/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user} => {self.comment} => {self.product}'

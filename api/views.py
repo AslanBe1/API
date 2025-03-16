@@ -1,16 +1,19 @@
 import requests
 from django.shortcuts import get_object_or_404
+from django.utils.termcolors import RESET
+from django.views.generic import DetailView
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, UpdateAPIView, RetrieveUpdateAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework.mixins import UpdateModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from api.models import Product, Category
-from api.serializers import ProductSerializer, CategorySerializer
+from api.models import Product, Category, Comment
+from api.serializers import ProductSerializer, CategorySerializer, CommentSerializer
 from bs4 import BeautifulSoup
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from api.permissions import GetOrPostPermission, UpdateTimePermission
 
 
 # class ExitAPI(APIView):
@@ -32,6 +35,7 @@ from rest_framework.views import APIView
 #
 #         return Response(data)
 
+#--------------------------------------------- Product --------------------------------------------------
 
 class ProductList(APIView):
     permission_classes = [AllowAny,]
@@ -52,6 +56,7 @@ class ProductList(APIView):
 
 
 class ProductDetailView(APIView):
+    permission_classes = [AllowAny,]
     def get(self,request, pk,format=None):
         product = Product.objects.get(pk=pk)
         serializer = ProductSerializer(product)
@@ -73,8 +78,44 @@ class ProductDetailView(APIView):
             return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
-#          Generic
+#----------------------------------------------- Comment -------------------------------------------------
 
+class CommentDetail(APIView):
+    permission_classes = [AllowAny,]
+    def get(self, request, pk, format=None):
+        comments = Comment.objects.get(pk=pk)
+        serializer = CommentSerializer(comments)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        comments = get_object_or_404(Comment,pk=pk)
+        serializer = CommentSerializer(comments,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        comments = get_object_or_404(Comment,pk=pk)
+        comments.delete()
+        data = {'Message': 'Comment deleted successfully'}
+        return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+
+class CommentsLists(ListAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def post(self,request,format=None):
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#------------------------------------------ Generic -------------------------------------------------------
+
+#------------------------------------------ Product --------------------------------------------------------
 class ProductLists(GenericAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
@@ -110,7 +151,7 @@ class ProductDetails(GenericAPIView,UpdateModelMixin):
         data = {'Message': 'Product deleted successfully'}
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
-
+# ----------------------------------------------------- Category ------------------------------------------------------
 class CategoryList(APIView):
     permission_classes = [AllowAny,]
     def get(self, request, format=None):
@@ -147,9 +188,35 @@ class CategoryDetail(APIView):
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
+#----------------------------------------------- Comment --------------------------------------------------
+
+class CommentDetailByGeneric(GenericAPIView,UpdateModelMixin):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    def get(self, request, pk, format=None):
+        comment = Comment.objects.get(pk=pk)
+        serializer = CommentSerializer(comment,context={"request": request})
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None,*args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, pk, format=None):
+        comments = Comment.objects.get(pk=pk)
+        comments.delete()
+        data = {'Message': 'Comment deleted successfully'}
+        return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
-#     Product
+class CommentListsByProduct(ListAPIView):
+    serializer_class = CommentSerializer
+    def get_queryset(self, *args, **kwargs):
+        product = self.kwargs['pk']
+        queryset = Comment.objects.filter(product=product)
+        return queryset
+
+#---------------------------------------------- Product Old -------------------------------------------------
+
 # class ProductUpdate(GenericAPIView,UpdateModelMixin):
 #     queryset = Product.objects.all()
 #     serializer_class = ProductSerializer
@@ -163,12 +230,7 @@ class CategoryDetail(APIView):
 #         return self.update(request, *args, **kwargs)
 
 
-# class ProductUpdateView(APIView):
-#     permission_classes = [AllowAny,]
-#     def put(self,request,pk,format=None):
-#         product = get_object_or_404(Product,pk=pk)
-#         serializer = ProductSerializer(product,data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ProductUpdateView(RetrieveUpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [UpdateTimePermission]
