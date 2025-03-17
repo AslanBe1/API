@@ -226,9 +226,3 @@ class CommentListsByProduct(ListAPIView):
 #
 #     def put(self, request, pk, format=None,*args, **kwargs):
 #         return self.update(request, *args, **kwargs)
-
-
-class ProductUpdateView(RetrieveUpdateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [UpdateTimePermission]

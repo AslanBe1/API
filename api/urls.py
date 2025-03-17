@@ -11,5 +11,5 @@ router.register(r'comments', views.CommentViewSet)
 
 urlpatterns = [ 
     path('',include(router.urls)),
-
+    path('product-delete/<int:pk>/', views.ProductDeleteView.as_view(), name='product-update'),
 ]
