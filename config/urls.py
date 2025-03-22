@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
-from rest_framework.authtoken import views
 from config import settings
 from config.settings import MEDIA_URL
 from rest_framework_simplejwt.views import (
@@ -16,3 +15,5 @@ urlpatterns = [
     path('api-token-refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ] + static(MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [path('__debug__/', include('debug_toolbar.urls'))]

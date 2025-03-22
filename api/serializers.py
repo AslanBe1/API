@@ -3,19 +3,24 @@ from api.models import Product, Category, Comment
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    products_count = serializers.IntegerField(source='product_count',read_only=True)
+
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['id','name','slug','products_count']
 
 
 class ProductSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), source='category', write_only=True
     )
+    comment_count = serializers.IntegerField(source='comments_count',read_only=True)
+
     category = CategorySerializer(read_only=True)
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ['id', 'name', 'price', 'discount', 'quantity', 'description',
+                  'rating', 'image', 'slug', 'comment_count', 'category', 'category_id']
 
     def get_image_url(self, obj):
         request = self.context.get('request')
