@@ -1,4 +1,7 @@
+from django.core.cache import cache,caches
 from django.db.models import Count
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -28,8 +31,16 @@ class ProductViewSet(ModelViewSet):
         return Response(serializer.data,status.HTTP_201_CREATED,headers=headers)
 
     def get_queryset(self):
-        queryset = Product.objects.annotate(comment_count=Count('comments'))
-        return queryset
+        cache_key = 'products/'
+        cached_products = cache.get(cache_key)
+        if not cached_products:
+            cached_products = Product.objects.all().select_related('category')
+            cache.set(cache_key, cached_products,timeout=60*2)
+        return cached_products
+
+    @method_decorator(cache_page(60))
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductViewSet, self).dispatch(request, *args, **kwargs)
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
@@ -45,8 +56,16 @@ class CategoryViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_queryset(self):
-        queryset = Category.objects.annotate(product_count=Count('products'))
-        return queryset
+        cache_key = 'categories/'
+        cached_categories = cache.get(cache_key)
+        if not cached_categories:
+            cached_categories = Category.objects.all()
+            cache.set(cache_key, cached_categories,timeout=60*2)
+        return cached_categories
+
+    @method_decorator(cache_page(60))
+    def dispatch(self, request, *args, **kwargs):
+        return super(CategoryViewSet, self).dispatch(request, *args, **kwargs)
 
 
 class CommentViewSet(ModelViewSet):
